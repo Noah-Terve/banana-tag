@@ -1,7 +1,15 @@
 1) Team Name: Banana
 2) Members: Theodore Schneider, Matt Zhou, Noah Tervalon
 3) The project: Banana Tag!
-    a) description: A game of tag where choas reigns. The rules are simple like 
+    a) Description: A game of tag where chaos reigns. 
+    b) Rules: Normal tag. However, when you are tagged you are temporarily suspended from the game
+              until the person that tagged you gets tagged. Thus, the only way to win is to tag 
+              everyone without being tagged once. Visit this link for more rulebook information
+              and a demonstration video: https://ultimatecampresource.com/camp-games/tag-games/banana-tag/
+    c) Our game: We plan to make an interactive game that allows many people to play at once time. Our 
+                 area of play will be a finite map with multiple player characters all striving to become
+                 the champion. 
 4) Min/Max Deliverable:
+    Min Deliverable:
 5) First Step:
 6) Biggest Forseen Problem: 
