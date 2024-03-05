@@ -30,7 +30,7 @@
     Max Deliverable: 
         Our maximum deliverable is a fully-polished game that supports
         large-scale player bases (15+). We aim to have multiple maps that 
-        each have unique layouts (obstacles, dark mode, etc).
+        each have unique layouts (obstacles, dark mode, etc). 
 
 5) First Step:
     We plan to start this project by diving deep into GUI documentation and
@@ -38,4 +38,7 @@
     we want to start by figuring out how to handle the input/output.
 
 6) Biggest Forseen Problem:
-    The biggest problem we forsee is input/output latency.
+    The biggest problem we forsee is input/output latency. Larger player
+    bases will result in a lot of input requests being sent to the server.
+    We anticipate that dealing with efficiency during the message handling
+    will be a problem.
