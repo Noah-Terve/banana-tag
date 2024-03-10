@@ -21,7 +21,7 @@
         Halligan servers. This game will be multi-player (minimum 4).
         Additionally, we want to have graphics for the game that allow all
         players to see what is currently happening in real-time. This includes
-        player movement, players tagging each other, and other events happeni
+        player movement, players tagging each other, and other events happening
         in the map. For the game to work, we also plan to have the ability to 
         accept input accurately from all players and avoid concurrency issues
         such as deadlocks, etc. On the whole, we aim to provide a smooth-gaming
