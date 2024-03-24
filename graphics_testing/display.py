@@ -7,7 +7,7 @@ import pygame
 # this import takes forever... im guessing its just a massive library that we
 # wont actually really utilize
 # import matplotlib as plot
-import tkinter
+# import tkinter
 from random import random, randrange as rr
 from math import sqrt
 
