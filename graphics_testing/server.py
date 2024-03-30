@@ -1,15 +1,13 @@
-# Display testing for different display modules in python:
-#   Pygame
-#   Matplotlib
-#   Tkinter
-
 import pygame
-# this import takes forever... im guessing its just a massive library that we
-# wont actually really utilize
-# import matplotlib as plot
-# import tkinter
 from random import random, randrange as rr
 from math import sqrt
+from enum import Enum
+
+class status(Enum):
+    FREE = 0
+    TAGGED = 1
+    CONTENTION = 2
+
 
 # Global constants
 DISPLAY_WIDTH = 1280
@@ -20,8 +18,6 @@ DIRECTIONS = [[-RAND_MOVE_SPEED, 0], [0, -RAND_MOVE_SPEED], [RAND_MOVE_SPEED, 0]
 
 # these are status, might want to add one for in contact while they are figuring
 # out who wins
-TAGGED = False
-FREE = True
 COLORS = []
 
 def make_new_rand_color():
@@ -45,7 +41,7 @@ def dist(pos1, pos2):
 class player:
     def __init__(self, name) -> None:
         self.name = name
-        self.status = FREE
+        self.status = status.FREE
         self.got_me_out = None
         self.pos = pygame.Vector2(rr(RADIUS + 1, DISPLAY_WIDTH - RADIUS + 1), rr(RADIUS + 1, DISPLAY_HEIGHT - RADIUS + 1))
         self.color = make_new_rand_color()
@@ -81,11 +77,11 @@ def check_collisions(player, players):
 
 def collide(p1, p2):
     if random() > 0.5:
-        p2.status = TAGGED
+        p2.status = status.TAGGED
         p2.got_me_out = p1
         print(p1.name + " tagged " + p2.name)
     else:
-        p1.status = TAGGED
+        p1.status = status.TAGGED
         p1.got_me_out = p2
         print(p2.name + " tagged " + p1.name) 
 
@@ -98,6 +94,7 @@ def move(pos):
     new_y = pos.y + y
     if new_y > RADIUS and new_y < DISPLAY_HEIGHT - RADIUS:
         pos.y = new_y
+        
 
 def main():
     gs = game_state(25)
@@ -118,12 +115,12 @@ def main():
         
         # this isn't perfect because players later in the list have an advantage
         for player in gs.players:
-            if not player.status:
+            if player.status == status.TAGGED:
                 # check if you should be back in
                 if player.got_me_out.status:
                     continue
                 print("Because " + player.got_me_out.name + " got out, " + player.name + " is back in")
-                player.status = FREE
+                player.status = status.FREE
                 player.got_me_out = None
                 
             # check collisions
@@ -131,11 +128,9 @@ def main():
             if collision:
                 collide(player, other_player)
             
-            if player.status:
+            if player.status == status.FREE:
                 pygame.draw.circle(screen, player.color, player.pos, RADIUS)
-                move(player.pos)
-                    
-                        
+                move(player.pos)         
                         
         # flip() the display to put your work on screen
         pygame.display.flip()
