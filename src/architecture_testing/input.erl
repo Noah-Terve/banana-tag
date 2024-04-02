@@ -1,8 +1,9 @@
 -module(input).
 
--export([connect/1  ]).
+-export([connect/1]).
 
--define(SERVER, {gameserver, 'server@DESKTOP-QTI2JJ6'}).
+-define(SERVER, {gameserver, 'server@vm-hw05'}).
 
 connect(PlayerName) ->
-    {gameserver, 'server@DESKTOP-QTI2JJ6'} ! {connect, input, self(), PlayerName}.
+    % ?SERVER ! {connect, input, self(), PlayerName}.
+    {gameserver, 'server@vm-hw05'} ! {connect, input, self(), PlayerName}.

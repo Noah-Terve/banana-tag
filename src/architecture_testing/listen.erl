@@ -6,4 +6,4 @@
 
 
 connect(PlayerName) ->
-    ?SERVER ! {connect, listen, self(), PlayerName}.
+    {gameserver, 'server@vm-hw05'} ! {connect, listen, self(), PlayerName}.
