@@ -15,6 +15,9 @@ loop(_NameMap) ->
         {connect, listen, _Pid, PlayerName} ->
             io:format("Received connection from listen node of Player ~s~n", [PlayerName]),
             loop(_NameMap);
+        {keystroke, Key, _Pid, PlayerName} ->
+            io:format("Received ~c from Player ~s~n", [Key, PlayerName]),
+            loop(_NameMap);
         {stop} -> ok
     end.
 

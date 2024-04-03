@@ -2,7 +2,7 @@
 
 -export([connect/1]).
 
--define(SERVER, {gameserver, 'server@DESKTOP-QTI2JJ6'}).
+-define(SERVER, {gameserver, 'server@vm-hw05'}).
 
 
 connect(PlayerName) ->
