@@ -6,14 +6,16 @@ read name
 
 erlc input.erl
 
+inputnode="${name}-input"
+listennode="${name}-listen" 
+
+
+
 # start listen node first
-erl -sname client -noshell -run listen connect $name -run init stop
+erl -sname $listennode -noshell -run listen connect $name -run listen start_display '/usr/bin/python3.11 test_display.py'&
 
 # prep terminal for input
 stty --f /dev/tty icanon raw
-
-# erl -pa ./ -run input start -run init stop -noshell
-erl -sname client -noshell -run input start $name -run init stop
-
+erl -sname $inputnode -noshell -run input start $name -run init stop
 # set terminal back 
 stty echo echok icanon -raw
