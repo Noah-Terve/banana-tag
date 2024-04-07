@@ -1,8 +1,9 @@
 -module(gameserver).
 
--export([start/0, loop/1]).
+-export([start/1, loop/1]).
 
-start() ->
+start(ServerFile) ->
+    _Port = open_port({spawn, ServerFile}, [binary, {packet, 4}, use_stdio]),
     register(gameserver, spawn(gameserver, loop, [maps:new()])).
 
 

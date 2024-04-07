@@ -11,3 +11,10 @@ connect(PlayerName) ->
 
 start_display(SpawnString) ->
     _Port = open_port({spawn, SpawnString}, [binary, {packet, 4}, use_stdio]).
+
+
+
+%  connect to server
+%  start display
+%  loop to receive info from server
+%  stop when recived stop signal

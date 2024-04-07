@@ -1,14 +1,23 @@
+from os import environ
+environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import pygame
-from random import random, randrange as rr
+from random import randrange as rr
 from math import sqrt
 from enum import Enum
+
+from erpy import stdio_port_connection
+from term import Atom
+
+INBOX, PORT = stdio_port_connection()
+PORT.send(Atom("go"))
 
 # Global constants
 DISPLAY_WIDTH = 1280
 DISPLAY_HEIGHT = 720
 RADIUS = 40
-RAND_MOVE_SPEED = 5
-DIRECTIONS = [[-RAND_MOVE_SPEED, 0], [0, -RAND_MOVE_SPEED], [RAND_MOVE_SPEED, 0], [0, RAND_MOVE_SPEED]]
+MOVE_SPEED = 2
+DIRECTIONS = {"a": [-MOVE_SPEED, 0], "s": [0, -MOVE_SPEED], "d": [MOVE_SPEED, 0], "w": [0, MOVE_SPEED]}
 
 class status(Enum):
     FREE = 0
@@ -44,6 +53,18 @@ class player:
         self.got_me_out = None
         self.pos = pygame.Vector2(rr(RADIUS + 1, DISPLAY_WIDTH - RADIUS + 1), rr(RADIUS + 1, DISPLAY_HEIGHT - RADIUS + 1))
         self.color = make_new_rand_color()
+        self.input = []
+    
+    def move(self):
+        for val in self.input:
+            x , y = DIRECTIONS[val]
+            new_x = self.pos.x + x
+            if new_x > RADIUS and new_x < DISPLAY_WIDTH - RADIUS:
+                self.pos.x = new_x
+            
+            new_y = self.pos.y + y
+            if new_y > RADIUS and new_y < DISPLAY_HEIGHT - RADIUS:
+                self.pos.y = new_y
 
 # make a class which is the "game state" this will undoubtedly change as we
 # progess, but just to have something. This stores coordinates for "players",
@@ -64,7 +85,7 @@ class game_state:
             self.players[i] = player("Player " + str(i))
             i += 1
         
-        print(self.players)
+        # print(self.players)
 
 def check_collisions(player, players):
     for other_player in players:
@@ -109,11 +130,36 @@ def game_running(gs):
     running = True
     update = True
     
+    # with open("output.txt", "a") as f:
+    #     print("In Game running", file=f)
+    
+    num = 0
     while running:
+        if num == 0:
+            return
+        num += 1
         # TODO: one thing to figure out is when we send updates
         if update:
             # grab updates on what players are doing from erlang
-            udpate = False
+            i = 0
+            for msg in INBOX:
+                # with open("output.txt", "a") as f:
+                #     print(f"In inbox, iter {i}", file=f)
+                
+                if (i == 10):
+                    break
+                
+                if msg == Atom("close"):
+                    # with open("output.txt", "a") as f:
+                    #     print(f"Closing", file=f)
+                    return
+                
+                # with open("output.txt", "a") as f:
+                #     print(f"got {msg}, type: {type(msg)}, {dir(msg)}", file=f)
+
+                i += 1
+                
+            update = False
         
         else:
             for player in gs.players:
@@ -134,7 +180,7 @@ def game_running(gs):
                 if player.status == status.TAGGED:
                     if player.got_me_out.status == status.FREE:
                         continue
-                    print("Because " + player.got_me_out.name + " got out, " + player.name + " is back in")
+                    # print("Because " + player.got_me_out.name + " got out, " + player.name + " is back in")
                     player.status = status.FREE
                     player.got_me_out = None
                     
@@ -144,7 +190,7 @@ def game_running(gs):
                     collide(player, other_player)
                 
                 if player.status == status.FREE:
-                    move(player.pos)
+                    player.move()
             update = True
 
 def main():

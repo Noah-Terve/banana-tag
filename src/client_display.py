@@ -4,10 +4,6 @@ environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 import erpy
 
-# Below is for venv use
-import sys
-# NOTE, you need to change this to your local path to the graphics_testing dir
-sys.path.append("/h/czhou06/comp21/project/banana-tag/src/graphics_testing/")
 from server import status, player, game_state, DISPLAY_HEIGHT, DISPLAY_WIDTH, RADIUS
 
 # Below for not venv use
