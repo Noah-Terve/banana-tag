@@ -1,9 +1,13 @@
 -module(gameserver).
 
--export([start/1, loop/1]).
+-export([start/1, reg_server/1, loop/1]).
 
 start(ServerFile) ->
+    register(gameserver, spawn(gameserver, reg_server, [ServerFile])).
+
+reg_server(ServerFile) ->
     Port = open_port({spawn, ServerFile}, [binary, {packet, 4}, use_stdio]),
+    io:format("port is open", []),
     receive
         {Port, {data, Bin}} ->
             case binary_to_term(Bin) of
@@ -11,8 +15,7 @@ start(ServerFile) ->
                 T  -> io:format("!!! unexpected: ~w~n", [T])
             end
     end,
-    register(gameserver, spawn(gameserver, loop, [Port])).
-
+    loop(Port).
 
 loop(Port) ->
     io:format("Iteration~n", []),
@@ -31,7 +34,4 @@ loop(Port) ->
             Port ! {self(), close},
             ok
     end.
-
-
-
 

@@ -1,6 +1,8 @@
 from os import environ
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
+import sys
+from time import sleep
 import pygame
 from random import randrange as rr
 from math import sqrt
@@ -11,6 +13,7 @@ from term import Atom
 
 INBOX, PORT = stdio_port_connection()
 PORT.send(Atom("go"))
+#print("successful connection", file=sys.stderr, flush=True)
 
 # Global constants
 DISPLAY_WIDTH = 1280
@@ -130,38 +133,40 @@ def game_running(gs):
     running = True
     update = True
     
-    # with open("output.txt", "a") as f:
-    #     print("In Game running", file=f)
+    with open("output.txt", "a") as f:
+        print("In Game running", file=f, flush=True)
     
-    num = 0
     while running:
-        if num == 0:
-            return
-        num += 1
         # TODO: one thing to figure out is when we send updates
         if update:
+            with open("output.txt", "a") as f:
+                print("In update right now", file=f, flush=True)
             # grab updates on what players are doing from erlang
             i = 0
+            # TODO: this will block until it actually gets 10 messages, need
+            #       to add a timeout 
             for msg in INBOX:
-                # with open("output.txt", "a") as f:
-                #     print(f"In inbox, iter {i}", file=f)
+                with open("output.txt", "a") as f:
+                    print(f"In inbox, iter {i}", file=f, flush=True)
                 
                 if (i == 10):
                     break
                 
                 if msg == Atom("close"):
-                    # with open("output.txt", "a") as f:
-                    #     print(f"Closing", file=f)
+                    with open("output.txt", "a") as f:
+                        print(f"Closing", file=f, flush=True)
                     return
                 
-                # with open("output.txt", "a") as f:
-                #     print(f"got {msg}, type: {type(msg)}, {dir(msg)}", file=f)
+                with open("output.txt", "a") as f:
+                    print(f"got {msg}, type: {type(msg)}, {dir(msg)}", file=f, flush=True)
 
                 i += 1
                 
             update = False
         
         else:
+            with open("output.txt", "a") as f:
+                print("In else to perform updates right now", file=f, flush=True)
             for player in gs.players:
                 # for every player check if their status should change
                 # should change if:
@@ -197,6 +202,8 @@ def main():
     gs = game_state(0)
     start_state(gs)
     game_running(gs)
+    with open("output.txt", "a") as f:
+        print(f"Done", file=f, flush=True)
 
 
 if __name__ == "__main__":

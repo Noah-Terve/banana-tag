@@ -5,6 +5,7 @@ read name
 # echo $name
 
 erlc input.erl
+erlc listen.erl
 
 inputnode="${name}-input"
 listennode="${name}-listen" 
