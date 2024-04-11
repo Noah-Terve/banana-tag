@@ -11,7 +11,7 @@ connect(PlayerName) ->
 
 start_display(SpawnString) ->
     _Port = open_port({spawn, SpawnString}, [binary, {packet, 4}, use_stdio]).
-
+    % call function that listens for messages from game server.erl
 
 
 %  connect to server
