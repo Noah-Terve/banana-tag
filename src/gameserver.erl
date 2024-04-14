@@ -1,6 +1,6 @@
 -module(gameserver).
 
--export([start/1, reg_server/1, loop/1]).
+-export([start/1, reg_server/1, loop/2]).
 
 start(ServerFile) ->
     register(gameserver, spawn(gameserver, reg_server, [ServerFile])).
@@ -15,22 +15,44 @@ reg_server(ServerFile) ->
                 T  -> io:format("!!! unexpected: ~w~n", [T])
             end
     end,
-    loop(Port).
+    loop(Port, []).
 
-loop(Port) ->
-    io:format("Iteration~n", []),
+
+% Update all listeners in the game
+updateListeners([], _GameState) ->
+    ok;
+updateListeners([Listener | Listeners], GameState) ->
+    Listener ! {update, binary_to_term(GameState)},
+    updateListeners(Listeners, GameState).
+
+
+% {name, {inputPid, listenPid}}
+loop(Port, ListenPids) ->
     receive 
         {connect, input, _Pid, PlayerName} ->
             io:format("Received connection from input node of Player ~s~n", [PlayerName]),
-            loop(Port);
-        {connect, listen, _Pid, PlayerName} ->
-            io:format("Received connection from listen node of Player ~s~n", [PlayerName]),
-            loop(Port);
+            loop(Port, ListenPids);
+
+        {connect, listen, Pid, PlayerName} ->
+            io:format("Received connection from listen node of Player ~s~p~n", [PlayerName, Pid]),
+            loop(Port, [Pid | ListenPids]);
+
         {keystroke, Key, _Pid, PlayerName} ->
             io:format("Received ~c from Player ~s~n", [Key, PlayerName]),
             Port ! {self(), {command, term_to_binary({PlayerName, Key})}},
-            loop(Port);
+            loop(Port, ListenPids);
+        
+        {Port, {data, Bin}} ->
+            case binary_to_term(Bin) of
+                {update, GameState} -> 
+                    updateListeners(ListenPids, GameState);
+                T  -> io:format("!!! unexpected server.py to gameserver.erl: 
+                                ~w~n", [T])
+            end,
+            loop(Port, ListenPids);
+
         {stop} -> 
+            updateListeners(ListenPids, stop),
             Port ! {self(), close},
             ok
     end.

@@ -2,18 +2,31 @@ from os import environ
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 import pygame
+import queue
+import threading
+from term import codec, Atom
 import erpy
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='clientDisplay.log', encoding='utf-8', level=logging.DEBUG)
+
+INBOX, PORT = erpy.stdio_port_connection()
+
 
 from server import status, player, game_state, DISPLAY_HEIGHT, DISPLAY_WIDTH, RADIUS
 
-# Below for not venv use
-# from .server import status, player, game_state, DISPLAY_HEIGHT, DISPLAY_WIDTH, RADIUS
-
-
+INPUT_QUEUE = queue.Queue()
 screen = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
 pygame.display.set_caption('Banana Tag')
 pygame.font.init()
 my_font = pygame.font.Font('freesansbold.ttf', 50)
+
+def enqueue_input():
+    for msg in INBOX:
+        logger.info(f"message: {msg} recieved, putting it in the queue")
+        INPUT_QUEUE.put(msg)
+        if msg == Atom("close"):
+            break
 
 def pre_game():
     while True:
@@ -43,41 +56,45 @@ def pre_game():
 
 def main():
     
-    pre_game()
+    # pre_game()
     # TODO: Get game state from server
-    gs = game_state(10)
+    gs = game_state()
+    
     # TODO: Get the palyer that represents you
     me = 1
 
-    running = True
-    update = True
-    inbox, port = erpy.stdio_port_connection()
+    listener = threading.Thread(target=enqueue_input, args = [])
+    listener.start()
     
+    running = True
+    i = 0
     while running:
-        if update:
-            pass
-            update = False
-            # TODO: get updates from erlang
-        
-        else:
-            # TODO: based on the current player's state we could change the
-            #       display as well.
+        try:
+            msg = INPUT_QUEUE.get_nowait()
+            if msg == Atom("close"):
+                break
             
-            # poll for events
-            # pygame.QUIT event means the user clicked X to close your window
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+            logger.info(f"got {msg}")
 
-            # fill the screen with a color to wipe away anything from last frame
-            screen.fill("white")
-            
-            for player in gs.players:
-                if player.status == status.FREE:
-                    pygame.draw.circle(screen, player.color, player.pos, RADIUS)
-                        
-            pygame.display.flip()
-            update = True
+        except:
+            pass
+        # TODO: based on the current player's state we could change the
+        #       display as well.
+        
+        # poll for events
+        # pygame.QUIT event means the user clicked X to close your window
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         running = False
+
+        # # fill the screen with a color to wipe away anything from last frame
+        # screen.fill("white")
+        
+        # for player in gs.players:
+        #     if player.status == status.FREE:
+        #         pygame.draw.circle(screen, player.color, player.pos, RADIUS)
+                    
+        # pygame.display.flip()
 
     # TODO: send message to erlang telling it we are done.
 

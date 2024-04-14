@@ -13,12 +13,13 @@ get_char(PlayerName) ->
     case binary_to_list(io:get_chars("Enter a character: ", 1)) of
         [Char] when Char == $q -> 
             io:format("TERMINATING");
-        [Char] ->
+        [Char] when Char == $a; Char == $w; Char == $s; Char == $d; Char == $r;
+                    Char == $p; Char == $z ->
             {gameserver, 'server@vm-hw05'} ! {keystroke, Char, self(), PlayerName},
             io:format("Got Char: ~c~n", [Char]),
             get_char(PlayerName);
         [] -> io:format("No input received~n");
-        _ -> io:format("Too many characters entered~n")
+        _ -> io:format("Invalid Character~n")
     end.
 
 start(PlayerName) ->

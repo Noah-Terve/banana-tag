@@ -13,7 +13,8 @@ listennode="${name}-listen"
 
 
 # start listen node first
-erl -sname $listennode -setcookie secretCookie -noshell -run listen connect $name -run listen start_display '/usr/bin/python3.11 client_display.py'&
+# erl -sname $listennode -setcookie secretCookie -run listen start $name '/usr/bin/python3.11 client_display.py'
+erl -sname $listennode -setcookie secretCookie -noshell -run listen start $name '/usr/bin/python3.11 client_display.py'&
 
 # prep terminal for input
 stty --f /dev/tty icanon raw
