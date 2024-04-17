@@ -35,6 +35,7 @@ loop(Port, ListenPids) ->
 
         {connect, listen, Pid, PlayerName} ->
             io:format("Received connection from listen node of Player ~s~p~n", [PlayerName, Pid]),
+            Port ! {self(), {command, term_to_binary(PlayerName)}},
             loop(Port, [Pid | ListenPids]);
 
         {keystroke, Key, _Pid, PlayerName} ->

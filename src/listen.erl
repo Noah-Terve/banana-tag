@@ -34,4 +34,5 @@ listen_loop(Port) ->
 start([PlayerName, SpawnString]) ->
     connect(PlayerName),
     Port = start_display(SpawnString),
+    Port ! {self(), {command, term_to_binary(PlayerName)}},
     listen_loop(Port).
