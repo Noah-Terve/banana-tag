@@ -188,13 +188,18 @@ def all_ready():
 # collect players that want to join
 def start_state():
     # wait for at least 2 people to join  
+    logger.info("About to enter players loop")
     while not all_ready() or len(PLAYERS) < 2:
+        logger.info("MADE it right before getting next message.")
         msg = INPUT_QUEUE.get()
+        logger.info("Made it past getting a message that player joined")
         if msg == Atom("close"):
             break
         
         if type(msg) == type(""): # if msg is string palyer is connecting
             PLAYERS.append(Player(msg))
+
+            logger.info("made it to appending the first player to join")
             
             # TESTING CODE
             PLAYERS.append(Player("player 1"))
