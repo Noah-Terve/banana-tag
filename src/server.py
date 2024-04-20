@@ -35,8 +35,8 @@ SCISSORS = 3
 DISPLAY_WIDTH = 1280
 DISPLAY_HEIGHT = 720
 RADIUS = 40
-MOVE_SPEED = 2
-DIRECTIONS = {97: [-MOVE_SPEED, 0], 115: [0, -MOVE_SPEED], 100: [MOVE_SPEED, 0], 119: [0, MOVE_SPEED]}
+MOVE_SPEED = 5
+DIRECTIONS = {97: [-MOVE_SPEED, 0], 115: [0, MOVE_SPEED], 100: [MOVE_SPEED, 0], 119: [0, -MOVE_SPEED]}
 INPUTS = [97, 115, 100, 119]
 CHOICE_MAP = {114: ROCK, 112: PAPER, 122: SCISSORS}
 CHOICES = [114, 112, 122]
@@ -85,12 +85,17 @@ class Player:
     # 3) the players in a rps battle hit their time limit (resolve the battle)
     # 4) move the player if they are free
     def update(self):
+        updating = False
+        if self.input != []:
+            updating = True
+            logger.info(f"Player: {self.name} is at pos: {self.pos.x}, {self.pos.y}. Has inputs of: {self.input}")
         # check if you should be back in
         if self.status == TAGGED:
             if self.got_me_out.status != TAGGED:
                 return
             self.status = FREE
             self.got_me_out = None
+            updating = True
         
         # check collisions
         collision, other_player = check_collisions(self, PLAYERS)
@@ -103,6 +108,8 @@ class Player:
             other_player.status = CONTENTION
             other_player.in_contention_with = self
             other_player.contention_time = now
+            
+            updating = True
         
         # process inputs
         for val in self.input:
@@ -118,6 +125,8 @@ class Player:
             elif val in CHOICES and self.status == CONTENTION:
                 self.choice = CHOICE_MAP[val]
         self.input = []
+        if updating:
+            logger.info(f"Player: {self.name} is at pos: {self.pos.x}, {self.pos.y}. Has inputs of: {self.input}")
         
         # check if we need to resolve contention.
         if self.status == CONTENTION and (datetime.now() - self.contention_time).seconds >= CONTENTION_TIME:
@@ -142,16 +151,16 @@ class Player:
                 self.same_choice = True
                 self.in_contention_with.same_choice = True
             elif i_win:
-                self.status = FREE
-                self.in_contention_with = None
-                self.choice = None
-                self.same_choice = False
-                
                 self.in_contention_with.status = TAGGED
                 self.in_contention_with.choice = None
                 self.in_contention_with.same_choice = False
                 self.in_contention_with.got_me_out = self
                 self.in_contention_with.in_contention_with = None
+                
+                self.status = FREE
+                self.in_contention_with = None
+                self.choice = None
+                self.same_choice = False
             else:
                 self.in_contention_with.status = FREE
                 self.in_contention_with.in_contention_with = None
@@ -163,6 +172,8 @@ class Player:
                 self.same_choice = False
                 self.got_me_out = self.in_contention_with
                 self.in_contention_with = None
+            updating = True
+        return updating
 
 def check_collisions(player, players):
     for other_player in players:
@@ -174,6 +185,7 @@ def check_collisions(player, players):
 
 def enqueue_input():
     for msg in INBOX:
+        logger.info(f"Got message: {msg} putting it on the queue")
         INPUT_QUEUE.put(msg)
         if msg == Atom("close"):
             break
@@ -187,35 +199,20 @@ def all_ready():
 # this is for when the game is starting
 # collect players that want to join
 def start_state():
-    # wait for at least 2 people to join  
-    logger.info("About to enter players loop")
+    # wait for at least 2 people to join 
     while not all_ready() or len(PLAYERS) < 2:
-        logger.info("MADE it right before getting next message.")
         msg = INPUT_QUEUE.get()
-        logger.info("Made it past getting a message that player joined")
         if msg == Atom("close"):
             break
         
         if type(msg) == type(""): # if msg is string palyer is connecting
             PLAYERS.append(Player(msg))
-
-            logger.info("made it to appending the first player to join")
-            
-            # TESTING CODE
-            PLAYERS.append(Player("player 1"))
-            PLAYERS.append(Player("Player 2"))
-            PLAYERS.append(Player("Player 3"))
-            PLAYERS.append(Player("Player 4"))
-            PLAYERS.append(Player("Player 5"))
-            for player in PLAYERS:
-                player.status = FREE
-            # TESTING CODE END
             
         else: # player sending data
             name, key = msg
             if key == 114:
                 for player in PLAYERS:
-                    if player.name == name:
+                    if player.name == name[0]:
                         player.status = FREE
 
     # TODO: send a message to everyone that we are starting, and include all data
@@ -239,7 +236,7 @@ def run_game():
             try:
                 name, key = msg
                 for player in PLAYERS:
-                    if player.name == name:
+                    if player.name == name[0]:
                         player.input.append(key)
             except:
                 pass # case of player connecting, don't do anything for them
@@ -248,8 +245,9 @@ def run_game():
             # no input to parse, do updates (this is primarily make sure no
             # timeouts were hit for people in contention)
 
+        updating = False
         for player in PLAYERS:
-            player.update()
+            updating = player.update() or updating
             
         # send updates out to players
         # build list to send out
@@ -257,9 +255,14 @@ def run_game():
         for player in PLAYERS:
             if player.got_me_out:
                 to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, player.got_me_out.name))
+            elif player.in_contention_with:
+                to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, player.in_contention_with.name))
             else:
                 to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, ""))
-        PORT.send((Atom("update"),codec.term_to_binary(to_send)))
+        
+        if updating:
+            logger.info(f"Sending: {to_send}")
+            PORT.send((Atom("update"),codec.term_to_binary(to_send)))
 
 def main():
     listener = threading.Thread(target=enqueue_input, args = [])

@@ -11,6 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='Display.log', encoding='utf-8', level=logging.DEBUG)
 
+END = 0
 INBOX, PORT = erpy.stdio_port_connection()
 PLAYERS = []
 
@@ -33,6 +34,9 @@ my_font = pygame.font.Font('freesansbold.ttf', 50)
 
 def enqueue_input():
     for msg in INBOX:
+        if END:
+            logger.info("Python is dying, killing python listener")
+            break
         logger.info(f"message: {msg} recieved, putting it in the queue")
         INPUT_QUEUE.put(msg)
         if msg == Atom("close"):
@@ -96,38 +100,62 @@ def main():
             if event.type == pygame.QUIT:
                 return
         
-        try:
-            msg = INPUT_QUEUE.get_nowait()
-            if msg == Atom("close"):
-                break
-            
-            if type(msg) == type([]): # game server sent out info to start game
-                i = 0
-                for status, x, y, same_choice, got_me_out in msg:
-                    PLAYERS[i].status = status
-                    PLAYERS[i].pos.x = x
-                    PLAYERS[i].pos.y = y
-                    PLAYERS[i].same_choice = same_choice
-                    PLAYERS[i].got_me_out = got_me_out
-                    i += 1
-        except:
-            pass
+        for _ in range(5):
+            try:
+                msg = INPUT_QUEUE.get_nowait()
+                if msg == Atom("close"):
+                    break
+                
+                if type(msg) == type([]): # game server sent out info to start game
+                    i = 0
+                    for status, x, y, same_choice, got_me_out in msg:
+                        PLAYERS[i].status = status
+                        PLAYERS[i].pos.x = x
+                        PLAYERS[i].pos.y = y
+                        PLAYERS[i].same_choice = same_choice
+                        if got_me_out:
+                            PLAYERS[i].got_me_out = got_me_out
+                        else:
+                            PLAYERS[i].got_me_out = ""
+                        i += 1
+            except:
+                pass
         
         if this_player.status == TAGGED:
-            pass
-            # TODO: display an appropriate message
-        elif this_player.status == CONTENTION:
-            pass
-            #TODO: display appropritate screen
-        elif this_player.status == FREE:
-            # fill the screen with a color to wipe away anything from last frame
             screen.fill("white")
-            
+                
+            text_surface = my_font.render(f'You were tagged by {this_player.got_me_out}. Waiting for them to get out.', False, (0, 0, 0))
+            textRect = text_surface.get_rect()
+            textRect.center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50) #TODO edit placement
+            screen.blit(text_surface, textRect)
+                
             for player in PLAYERS:
                 if player.status == FREE:
                     pygame.draw.circle(screen, player.color, player.pos, RADIUS)
-            pygame.display.flip()
+            
+        elif this_player.status == CONTENTION:
+            screen.fill("white")
+            
+            text_surface = my_font.render(f'You and {this_player.got_me_out} tagged eachother!', False, (0, 0, 0))
+            textRect = text_surface.get_rect()
+            textRect.center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50)
+            screen.blit(text_surface, textRect)
+            
+            text_surface2 = my_font.render('Press r, p, or z to choose rock paper or scissors', False, (0, 0, 0))
+            textRect2 = text_surface2.get_rect()
+            textRect2.center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 50)
+            screen.blit(text_surface2, textRect2)
+            
+        elif this_player.status == FREE:
+            # fill the screen with a color to wipe away anything from last frame
+            screen.fill("white")
+                
+            for player in PLAYERS:
+                if player.status == FREE:
+                    pygame.draw.circle(screen, player.color, player.pos, RADIUS)
 
+        pygame.display.flip()
+    
     # TODO: send message to erlang telling it we are done.
 
 if __name__ == "__main__":
