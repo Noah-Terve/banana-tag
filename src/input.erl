@@ -16,10 +16,10 @@ get_char(PlayerName) ->
         [Char] when Char == $a; Char == $w; Char == $s; Char == $d; Char == $r;
                     Char == $p; Char == $z ->
             {gameserver, 'server@vm-hw05'} ! {keystroke, Char, self(), PlayerName},
-            io:format("Got Char: ~c~n", [Char]),
+            % io:format("Got Char: ~c~n", [Char]),
             get_char(PlayerName);
-        [] -> io:format("No input received~n");
-        _ -> io:format("Invalid Character~n")
+        [] -> ok;% io:format("No input received~n");
+        _ -> get_char(PlayerName)
     end.
 
 start(PlayerName) ->

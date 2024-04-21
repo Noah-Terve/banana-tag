@@ -25,6 +25,11 @@ updateListeners([Listener | Listeners], GameState) ->
     Listener ! {update, binary_to_term(GameState)},
     updateListeners(Listeners, GameState).
 
+updateListeners2([], _Msg) ->
+    ok;
+updateListeners2([Listener | Listeners], Msg) ->
+    Listener ! {update, Msg},
+    updateListeners(Listeners, Msg).
 
 % {name, {inputPid, listenPid}}
 loop(Port, ListenPids) ->
@@ -39,7 +44,7 @@ loop(Port, ListenPids) ->
             loop(Port, [Pid | ListenPids]);
 
         {keystroke, Key, _Pid, PlayerName} ->
-            io:format("Received ~c from Player ~s~n", [Key, PlayerName]),
+            % io:format("Received ~c from Player ~s~n", [Key, PlayerName]),
             Port ! {self(), {command, term_to_binary({PlayerName, Key})}},
             loop(Port, ListenPids);
         
@@ -52,8 +57,13 @@ loop(Port, ListenPids) ->
             end,
             loop(Port, ListenPids);
 
-        {stop} -> 
-            updateListeners(ListenPids, stop),
-            Port ! {self(), close},
-            ok
+        stop -> 
+            updateListeners2(ListenPids, stop),
+            Port ! {self(), {command, term_to_binary(close)}},
+            ok;
+        
+        restart -> 
+            updateListeners2(ListenPids, stop),
+            Port ! {self(), {command, term_to_binary(restart)}},
+            loop(Port, ListenPids)
     end.

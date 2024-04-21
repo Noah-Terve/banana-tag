@@ -10,14 +10,22 @@ import erpy
 import logging
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename='Display.log', encoding='utf-8', level=logging.DEBUG)
+# logger = logging.get# logger(__name__)
+# logging.basicConfig(filename='Display.log', encoding='utf-8', level=logging.DEBUG)
 
 END = 0
 INBOX, PORT = erpy.stdio_port_connection()
 PLAYERS = []
 
-from server import DISPLAY_HEIGHT, DISPLAY_WIDTH, RADIUS, FREE, TAGGED, CONTENTION
+# status options
+FREE = 0
+TAGGED = 1
+CONTENTION = 2
+
+# Global constants
+DISPLAY_WIDTH = 1280
+DISPLAY_HEIGHT = 720
+RADIUS = 40
 
 class Player:
     def __init__(self, name, x, y, color) -> None:
@@ -38,11 +46,11 @@ def enqueue_input():
     MSG_NUM = 0
     for msg in INBOX:
         if END:
-            logger.info("Python is dying, killing python listener")
+            # logger.info("Python is dying, killing python listener")
             break
-        logger.info(f"Message {MSG_NUM} at {datetime.now()}: {msg}")
+        # logger.info(f"Message {MSG_NUM} at {datetime.now()}: {msg}")
         MSG_NUM += 1
-        # logger.info(f"message: {msg} recieved, putting it in the queue")
+        # # logger.info(f"message: {msg} recieved, putting it in the queue")
         INPUT_QUEUE.put(msg)
         if msg == Atom("close"):
             break
@@ -75,7 +83,7 @@ def pre_game():
             if type(msg) == type([]): # game server sent out info to start game
                 for player in msg:
                     PLAYERS.append(Player(*player))
-                logger.info(PLAYERS)
+                # logger.info(PLAYERS)
                 return
         except:
             pass
@@ -86,7 +94,7 @@ def main():
     listener.start()
     
     name = INPUT_QUEUE.get()
-    logger.info(f"Player name is {name}")
+    # logger.info(f"Player name is {name}")
     pre_game()
     this_player = None
     for player in PLAYERS:
@@ -95,7 +103,7 @@ def main():
             break
     
     if not this_player:
-        logger.info("failed to get player information based on name, exiting")
+        # logger.info("failed to get player information based on name, exiting")
         return
     
     while True:
@@ -105,7 +113,7 @@ def main():
             if event.type == pygame.QUIT:
                 return
         
-        for _ in range(5):
+        for _ in range(50):
             try:
                 msg = INPUT_QUEUE.get_nowait()
                 if msg == Atom("close"):

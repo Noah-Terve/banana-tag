@@ -11,7 +11,6 @@ inputnode="${name}-input"
 listennode="${name}-listen" 
 
 
-
 # start listen node first
 erl -sname $listennode -setcookie secretCookie -hidden -noshell -run listen start $name '/usr/bin/python3.11 client_display.py'&
 

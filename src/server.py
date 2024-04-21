@@ -10,8 +10,8 @@ from datetime import datetime
 from random import randrange as rr
 from math import sqrt
 import logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename='Server.log', encoding='utf-8', level=logging.DEBUG)
+# logger = logging.get# logger(__name__)
+# logging.basicConfig(filename='Server.log', encoding='utf-8', level=logging.DEBUG)
 
 from erpy import stdio_port_connection
 from term import codec, Atom
@@ -37,7 +37,7 @@ SCISSORS = 3
 DISPLAY_WIDTH = 1280
 DISPLAY_HEIGHT = 720
 RADIUS = 40
-MOVE_SPEED = 2
+MOVE_SPEED = 5
 DIRECTIONS = {97: [-MOVE_SPEED, 0], 115: [0, MOVE_SPEED], 100: [MOVE_SPEED, 0], 119: [0, -MOVE_SPEED]}
 INPUTS = [97, 115, 100, 119]
 CHOICE_MAP = {114: ROCK, 112: PAPER, 122: SCISSORS}
@@ -90,7 +90,6 @@ class Player:
         updating = False
         if self.input != []:
             updating = True
-            logger.info(f"Player: {self.name} is at pos: {self.pos.x}, {self.pos.y}. Has inputs of: {self.input}")
         # check if you should be back in
         if self.status == TAGGED:
             if self.got_me_out.status != TAGGED:
@@ -127,8 +126,6 @@ class Player:
             elif val in CHOICES and self.status == CONTENTION:
                 self.choice = CHOICE_MAP[val]
         self.input = []
-        if updating:
-            logger.info(f"Player: {self.name} is at pos: {self.pos.x}, {self.pos.y}. Has inputs of: {self.input}")
         
         # check if we need to resolve contention.
         if self.status == CONTENTION and (datetime.now() - self.contention_time).seconds >= CONTENTION_TIME:
@@ -187,7 +184,7 @@ def check_collisions(player, players):
 
 def enqueue_input():
     for msg in INBOX:
-        logger.info(f"Got message: {msg} putting it on the queue")
+        # logger.info(f"Got message: {msg} putting it on the queue")
         INPUT_QUEUE.put(msg)
         if msg == Atom("close"):
             break
@@ -201,11 +198,16 @@ def all_ready():
 # this is for when the game is starting
 # collect players that want to join
 def start_state():
+    global PLAYERS
+    global MSG_NUM
     # wait for at least 2 people to join 
     while not all_ready() or len(PLAYERS) < 2:
         msg = INPUT_QUEUE.get()
         if msg == Atom("close"):
-            break
+            sys.exit(0)
+        
+        if msg == Atom("restart"):
+            return False
         
         if type(msg) == type(""): # if msg is string palyer is connecting
             PLAYERS.append(Player(msg))
@@ -224,20 +226,26 @@ def start_state():
     to_send = []
     for player in PLAYERS:
         to_send.append((player.name, player.pos.x, player.pos.y, player.color))
-    logger.info(f"Message {MSG_NUM}, at {datetime.now()}: {to_send}")
+    # logger.info(f"Message {MSG_NUM}, at {datetime.now()}: {to_send}")
     MSG_NUM += 1
     PORT.send((Atom("update"),codec.term_to_binary(to_send)))
+    return True
 
 
 def run_game():
+    global PLAYERS
+    global MSG_NUM
     while True:
         for _ in range(10):
             try:
                 msg = INPUT_QUEUE.get_nowait()
                 if msg == Atom("close"):
+                    sys.exit(0)
+                
+                if msg == Atom("restart"):
                     return
                 
-                logger.info(f"got {msg}")
+                # logger.info(f"got {msg}")
                 try:
                     name, key = msg
                     for player in PLAYERS:
@@ -266,17 +274,20 @@ def run_game():
                 to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, ""))
         
         if updating:
-            logger.info(f"Message {MSG_NUM} at {datetime.now()}: {to_send}")
+            # logger.info(f"Message {MSG_NUM} at {datetime.now()}: {to_send}")
             MSG_NUM += 1
             PORT.send((Atom("update"),codec.term_to_binary(to_send)))
 
 def main():
+    global PLAYERS
     listener = threading.Thread(target=enqueue_input, args = [])
     listener.start()
-    start_state()
-    run_game()
+    while True:
+        PLAYERS = []
+        if not start_state():
+            continue
+        run_game()
 
 
 if __name__ == "__main__":
     main()
-    

@@ -23,7 +23,7 @@ listen_loop(Port) ->
             Port ! {self(), {command, term_to_binary(GameState)}},
 
             listen_loop(Port);
-        stop -> ok;
+        stop -> Port ! {self(), close};
         MSG -> io:format(MSG)
     end.
 
