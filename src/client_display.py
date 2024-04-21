@@ -10,8 +10,6 @@ import erpy
 import logging
 from datetime import datetime
 
-MSG_NUM = 0
-
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='Display.log', encoding='utf-8', level=logging.DEBUG)
 
@@ -37,6 +35,7 @@ pygame.font.init()
 my_font = pygame.font.Font('freesansbold.ttf', 50)
 
 def enqueue_input():
+    MSG_NUM = 0
     for msg in INBOX:
         if END:
             logger.info("Python is dying, killing python listener")
