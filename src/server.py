@@ -16,6 +16,8 @@ logging.basicConfig(filename='Server.log', encoding='utf-8', level=logging.DEBUG
 from erpy import stdio_port_connection
 from term import codec, Atom
 
+MSG_NUM = 0
+
 INBOX, PORT = stdio_port_connection()
 PORT.send(Atom("go"))
 
@@ -35,7 +37,7 @@ SCISSORS = 3
 DISPLAY_WIDTH = 1280
 DISPLAY_HEIGHT = 720
 RADIUS = 40
-MOVE_SPEED = 5
+MOVE_SPEED = 2
 DIRECTIONS = {97: [-MOVE_SPEED, 0], 115: [0, MOVE_SPEED], 100: [MOVE_SPEED, 0], 119: [0, -MOVE_SPEED]}
 INPUTS = [97, 115, 100, 119]
 CHOICE_MAP = {114: ROCK, 112: PAPER, 122: SCISSORS}
@@ -222,28 +224,31 @@ def start_state():
     to_send = []
     for player in PLAYERS:
         to_send.append((player.name, player.pos.x, player.pos.y, player.color))
+    logger.info(f"Message {MSG_NUM}, at {datetime.now()}: {to_send}")
+    MSG_NUM += 1
     PORT.send((Atom("update"),codec.term_to_binary(to_send)))
 
 
 def run_game():
     while True:
-        try:
-            msg = INPUT_QUEUE.get_nowait()
-            if msg == Atom("close"):
-                break
-            
-            logger.info(f"got {msg}")
+        for _ in range(10):
             try:
-                name, key = msg
-                for player in PLAYERS:
-                    if player.name == name[0]:
-                        player.input.append(key)
+                msg = INPUT_QUEUE.get_nowait()
+                if msg == Atom("close"):
+                    return
+                
+                logger.info(f"got {msg}")
+                try:
+                    name, key = msg
+                    for player in PLAYERS:
+                        if player.name == name[0]:
+                            player.input.append(key)
+                except:
+                    pass # case of player connecting, don't do anything for them
             except:
-                pass # case of player connecting, don't do anything for them
-        except:
-            pass
-            # no input to parse, do updates (this is primarily make sure no
-            # timeouts were hit for people in contention)
+                pass
+                # no input to parse, do updates (this is primarily make sure no
+                # timeouts were hit for people in contention)
 
         updating = False
         for player in PLAYERS:
@@ -261,7 +266,8 @@ def run_game():
                 to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, ""))
         
         if updating:
-            logger.info(f"Sending: {to_send}")
+            logger.info(f"Message {MSG_NUM} at {datetime.now()}: {to_send}")
+            MSG_NUM += 1
             PORT.send((Atom("update"),codec.term_to_binary(to_send)))
 
 def main():

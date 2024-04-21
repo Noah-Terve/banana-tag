@@ -57,4 +57,3 @@ loop(Port, ListenPids) ->
             Port ! {self(), close},
             ok
     end.
-

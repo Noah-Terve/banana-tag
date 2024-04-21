@@ -8,6 +8,10 @@ import threading
 from term import codec, Atom
 import erpy
 import logging
+from datetime import datetime
+
+MSG_NUM = 0
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='Display.log', encoding='utf-8', level=logging.DEBUG)
 
@@ -37,7 +41,9 @@ def enqueue_input():
         if END:
             logger.info("Python is dying, killing python listener")
             break
-        logger.info(f"message: {msg} recieved, putting it in the queue")
+        logger.info(f"Message {MSG_NUM} at {datetime.now()}: {msg}")
+        MSG_NUM += 1
+        # logger.info(f"message: {msg} recieved, putting it in the queue")
         INPUT_QUEUE.put(msg)
         if msg == Atom("close"):
             break
