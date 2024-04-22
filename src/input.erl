@@ -16,7 +16,7 @@ get_char(Server, PlayerName) ->
             {gameserver, Server} ! {keystroke, Char, self(), PlayerName},
             % io:format("Got Char: ~c~n", [Char]),
             get_char(Server, PlayerName);
-        [] -> ok;% io:format("No input received~n");
+        [] -> ok;
         _ -> get_char(Server, PlayerName)
     end.
 

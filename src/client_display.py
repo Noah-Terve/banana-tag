@@ -111,13 +111,14 @@ def main():
         # pygame.QUIT event means the user clicked X to close your window
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                PORT.send(Atom("close"))
                 return
         
         for _ in range(50):
             try:
                 msg = INPUT_QUEUE.get_nowait()
                 if msg == Atom("close"):
-                    break
+                    return
                 
                 if type(msg) == type([]): # game server sent out info to start game
                     i = 0
@@ -169,7 +170,6 @@ def main():
 
         pygame.display.flip()
     
-    # TODO: send message to erlang telling it we are done.
 
 if __name__ == "__main__":
     main()

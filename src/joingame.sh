@@ -25,3 +25,4 @@ stty -f /dev/tty icanon raw
 erl -sname $inputnode -setcookie secretCookie -hidden -noshell -run input start $server $name -run init stop
 # set terminal back 
 stty echo echok icanon -raw
+

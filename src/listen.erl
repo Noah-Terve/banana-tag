@@ -14,14 +14,13 @@ start_display(SpawnString) ->
 listen_loop(Port) ->
     receive 
         {update, GameState} ->
-            % case GameState of 
-            %     [{I1, I2, I3, S1}] -> io:format("Received msg from server ~B ~B ~B ~s~n", [I1, I2, I3, S1]);
-            %     _ -> io:format("Error", [])
-            % end,
             Port ! {self(), {command, term_to_binary(GameState)}},
-
             listen_loop(Port);
-        stop -> Port ! {self(), close};
+        stop -> Port ! {self(), {command, term_to_binary(close)}};
+        {Port, {data, Msg}} ->
+            case binary_to_term(Msg) of
+                close -> ok
+            end;
         MSG -> io:format(MSG)
     end.
 
