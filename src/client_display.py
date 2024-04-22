@@ -183,10 +183,7 @@ def main():
                     screen.blit(text_surface, textRect)
 
         pygame.display.flip()
-<<<<<<< HEAD
     
-=======
->>>>>>> c6ee45b (editing speed, and updating so circles have names on them)
 
 if __name__ == "__main__":
     main()
