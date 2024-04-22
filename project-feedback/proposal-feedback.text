@@ -1,6 +1,0 @@
-Great job with your proposal!
-
-Your tag game sounds like a lot of fun! Consider creating a TUI using
-something like ncurses as x-forwarding for graphical interfaces can be
-very laggy!  Alternatively, one could use a web interface (as long as
-the web interface doesn't do all the concurrency for you).
