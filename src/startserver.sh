@@ -1,3 +1,6 @@
-# has to be on vm05 for now
+echo "Input the path to your python"
+read python
+
+
 erlc gameserver.erl
-erl -sname server -setcookie secretCookie -run gameserver start '/usr/bin/python3.11 -u server.py'
+erl -sname server -setcookie secretCookie -run gameserver start '/usr/local/bin/python3.11 -u server.py'

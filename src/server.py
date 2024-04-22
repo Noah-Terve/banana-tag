@@ -10,8 +10,8 @@ from datetime import datetime
 from random import randrange as rr
 from math import sqrt
 import logging
-# logger = logging.get# logger(__name__)
-# logging.basicConfig(filename='Server.log', encoding='utf-8', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='Server.log', encoding='utf-8', level=logging.DEBUG)
 
 from erpy import stdio_port_connection
 from term import codec, Atom
@@ -183,8 +183,9 @@ def check_collisions(player, players):
     return False, None
 
 def enqueue_input():
+    global INPUT_QUEUE
     for msg in INBOX:
-        # logger.info(f"Got message: {msg} putting it on the queue")
+        logger.info(f"Got message: {msg} putting it on the queue")
         INPUT_QUEUE.put(msg)
         if msg == Atom("close"):
             break
@@ -200,9 +201,11 @@ def all_ready():
 def start_state():
     global PLAYERS
     global MSG_NUM
+    global INPUT_QUEUE
     # wait for at least 2 people to join 
     while not all_ready() or len(PLAYERS) < 2:
         msg = INPUT_QUEUE.get()
+        logger.info(f"got message: {msg}")
         if msg == Atom("close"):
             sys.exit(0)
         
@@ -216,7 +219,7 @@ def start_state():
             name, key = msg
             if key == 114:
                 for player in PLAYERS:
-                    if player.name == name[0]:
+                    if player.name == name:
                         player.status = FREE
 
     # TODO: send a message to everyone that we are starting, and include all data
@@ -226,7 +229,7 @@ def start_state():
     to_send = []
     for player in PLAYERS:
         to_send.append((player.name, player.pos.x, player.pos.y, player.color))
-    # logger.info(f"Message {MSG_NUM}, at {datetime.now()}: {to_send}")
+    logger.info(f"Message {MSG_NUM}, at {datetime.now()}: {to_send}")
     MSG_NUM += 1
     PORT.send((Atom("update"),codec.term_to_binary(to_send)))
     return True
@@ -235,6 +238,7 @@ def start_state():
 def run_game():
     global PLAYERS
     global MSG_NUM
+    global INPUT_QUEUE
     while True:
         for _ in range(10):
             try:
@@ -245,11 +249,11 @@ def run_game():
                 if msg == Atom("restart"):
                     return
                 
-                # logger.info(f"got {msg}")
+                logger.info(f"got {msg}")
                 try:
                     name, key = msg
                     for player in PLAYERS:
-                        if player.name == name[0]:
+                        if player.name == name:
                             player.input.append(key)
                 except:
                     pass # case of player connecting, don't do anything for them
@@ -274,7 +278,7 @@ def run_game():
                 to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, ""))
         
         if updating:
-            # logger.info(f"Message {MSG_NUM} at {datetime.now()}: {to_send}")
+            logger.info(f"Message {MSG_NUM} at {datetime.now()}: {to_send}")
             MSG_NUM += 1
             PORT.send((Atom("update"),codec.term_to_binary(to_send)))
 

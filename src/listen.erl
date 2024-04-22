@@ -1,12 +1,10 @@
 -module(listen).
 
--export([start/1, connect/1, start_display/1]).
-
--define(SERVER, {gameserver, 'server@vm-hw05'}).
+-export([start/1, connect/2, start_display/1]).
 
 
-connect(PlayerName) ->
-    {gameserver, 'server@vm-hw05'} ! {connect, listen, self(), PlayerName}.
+connect(Server, PlayerName) ->
+    {gameserver, Server} ! {connect, listen, self(), PlayerName}.
 
 
 start_display(SpawnString) ->
@@ -31,8 +29,9 @@ listen_loop(Port) ->
 %  start display
 %  loop to receive info from server
 %  stop when recived stop signal
-start([PlayerName, SpawnString]) ->
-    connect(PlayerName),
+start([Server, PlayerName, SpawnString]) ->
+    Server_name = list_to_atom(Server),
+    connect(Server_name, PlayerName),
     Port = start_display(SpawnString),
     Port ! {self(), {command, term_to_binary(PlayerName)}},
     listen_loop(Port).

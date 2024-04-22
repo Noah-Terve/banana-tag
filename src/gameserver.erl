@@ -44,7 +44,7 @@ loop(Port, ListenPids) ->
             loop(Port, [Pid | ListenPids]);
 
         {keystroke, Key, _Pid, PlayerName} ->
-            % io:format("Received ~c from Player ~s~n", [Key, PlayerName]),
+            io:format("Received ~c from Player ~s~n", [Key, PlayerName]),
             Port ! {self(), {command, term_to_binary({PlayerName, Key})}},
             loop(Port, ListenPids);
         
