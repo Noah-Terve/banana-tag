@@ -41,6 +41,7 @@ screen = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
 pygame.display.set_caption('Banana Tag')
 pygame.font.init()
 my_font = pygame.font.Font('freesansbold.ttf', 50)
+player_font = pygame.font.Font('freesansbold.ttf', 20)
 
 def enqueue_input():
     MSG_NUM = 0
@@ -138,14 +139,23 @@ def main():
         if this_player.status == TAGGED:
             screen.fill("white")
                 
-            text_surface = my_font.render(f'You were tagged by {this_player.got_me_out}. Waiting for them to get out.', False, (0, 0, 0))
+            text_surface = my_font.render(f'You were tagged by {this_player.got_me_out}.', False, (0, 0, 0))
             textRect = text_surface.get_rect()
-            textRect.center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 - 50) #TODO edit placement
+            textRect.center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 100)
             screen.blit(text_surface, textRect)
                 
+            text_surface2 = my_font.render('Waiting for them to get out.', False, (0, 0, 0))
+            textRect2 = text_surface2.get_rect()
+            textRect2.center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2 + 200)
+            screen.blit(text_surface2, textRect2)
+            
             for player in PLAYERS:
                 if player.status == FREE:
                     pygame.draw.circle(screen, player.color, player.pos, RADIUS)
+                    pygame.draw.circle(screen, player.color, player.pos, RADIUS)
+                    text_surface = player_font.render(f'{player.name}', False, (0, 0, 0))
+                    textRect = text_surface.get_rect()
+                    textRect.center = (player.pos.x, player.pos.y)
             
         elif this_player.status == CONTENTION:
             screen.fill("white")
@@ -167,9 +177,16 @@ def main():
             for player in PLAYERS:
                 if player.status == FREE:
                     pygame.draw.circle(screen, player.color, player.pos, RADIUS)
+                    text_surface = player_font.render(f'{player.name}', False, (0, 0, 0))
+                    textRect = text_surface.get_rect()
+                    textRect.center = (player.pos.x, player.pos.y)
+                    screen.blit(text_surface, textRect)
 
         pygame.display.flip()
+<<<<<<< HEAD
     
+=======
+>>>>>>> c6ee45b (editing speed, and updating so circles have names on them)
 
 if __name__ == "__main__":
     main()

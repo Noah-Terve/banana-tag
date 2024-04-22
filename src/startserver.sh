@@ -1,5 +1,5 @@
-echo "Input the path to your python"
-read python
+# echo "Input the path to your python"
+# read python
 
 
 erlc gameserver.erl
