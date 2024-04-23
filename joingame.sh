@@ -19,3 +19,4 @@ erl -sname $inputnode -setcookie secretCookie -hidden -noshell -run input start 
 # set terminal back 
 stty echo echok icanon -raw
 
+ps aux | grep 'client_display.py' | awk '{print $2}' | xargs kill 
