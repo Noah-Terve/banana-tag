@@ -1,8 +1,10 @@
+# server.py
+# Python server, handles all the processing in the game.
+
 from os import environ
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 import sys
-import time
 import pygame
 import queue
 import threading
@@ -18,6 +20,7 @@ from term import codec, Atom
 
 MSG_NUM = 0
 
+# tell the erlang we are good to go
 INBOX, PORT = stdio_port_connection()
 PORT.send(Atom("go"))
 
@@ -65,11 +68,29 @@ def make_new_rand_color():
             return color
 
 def dist(pos1, pos2):
+    """get the distance between 2 points
+
+    Args:
+        pos1 (pygame position): first position
+        pos2 (pygame position): second position
+
+    Returns:
+        float: distance between the 2 passed in points
+    """
     return sqrt((abs(pos1.x - pos2.x)**2) + (abs(pos1.y - pos2.y)**2))
 
 
 class Player:
+    """
+        Player class which stores information about players and allows them
+        to update themselves.
+    """
     def __init__(self, name) -> None:
+        """Initialize a player.
+
+        Args:
+            name (string): name of player.
+        """
         self.name = name
         self.status = WAITING
         self.got_me_out = None
@@ -88,13 +109,19 @@ class Player:
     # 3) the players in a rps battle hit their time limit (resolve the battle)
     # 4) move the player if they are free
     def update(self):
+        """Update the player's info based on their input.
+
+        Returns:
+            bool: _description_
+        """
         updating = False
         if self.input != []:
             updating = True
         # check if you should be back in
         if self.status == TAGGED:
             if self.got_me_out.status != TAGGED:
-                return
+                self.input = []
+                return updating
             self.status = FREE
             self.got_me_out = None
             updating = True
@@ -177,6 +204,16 @@ class Player:
         return updating
 
 def check_collisions(player, players):
+    """check if a player has collided with anyone else.
+
+    Args:
+        player (Player): Player to check collisions for.
+        players (List Players): List of all other players.
+
+    Returns:
+        (Bool, Player): Returns whether the player has collided with anyone,
+                        and if so, which player that is.
+    """
     for other_player in players:
         if other_player == player or other_player.status != FREE:
             continue
@@ -185,6 +222,10 @@ def check_collisions(player, players):
     return False, None
 
 def enqueue_input():
+    """
+    Listen for input from the erlang and put it into the queue for the
+        display to pick up.
+    """
     global INPUT_QUEUE
     for msg in INBOX:
         logger.info(f"Got message: {msg} putting it on the queue")
@@ -193,6 +234,11 @@ def enqueue_input():
             break
 
 def all_ready():
+    """check if all players are ready.
+
+    Returns:
+        bool: indication of whether all players are ready or not.
+    """
     for player in PLAYERS:
         if player.status != FREE:
             return False
@@ -201,6 +247,14 @@ def all_ready():
 # this is for when the game is starting
 # collect players that want to join
 def start_state():
+    """
+        Sit in the start state and allow player connections until at least 2
+        players join, and then everyone is ready.
+
+    Returns:
+        bool: indication of whether or not the game should start or we are
+              resetting the server 
+    """
     global PLAYERS
     global MSG_NUM
     global INPUT_QUEUE
@@ -236,10 +290,15 @@ def start_state():
 
 
 def run_game():
+    """
+        Run the game by looping and getting input and then updating the state
+        of the game.
+    """
     global PLAYERS
     global MSG_NUM
     global INPUT_QUEUE
     while True:
+        # get 10 inputs
         for _ in range(10):
             try:
                 msg = INPUT_QUEUE.get_nowait()
@@ -287,6 +346,8 @@ def run_game():
             PORT.send((Atom("update"),codec.term_to_binary(to_send)))
 
 def main():
+    """Run the gameserver.
+    """
     global PLAYERS
     listener = threading.Thread(target=enqueue_input, args = [])
     listener.start()
