@@ -27,6 +27,14 @@ RADIUS = 40
 class Player:
     """Info that client needs on the player."""
     def __init__(self, name, x, y, color) -> None:
+        """Initialize the player
+
+        Args:
+            name (string): name of player
+            x (float): x coordinate
+            y (float): y coordinate
+            color (3 tuple of ints): a color in rgb tuple
+        """
         self.name = name
         self.status = FREE
         self.got_me_out = None

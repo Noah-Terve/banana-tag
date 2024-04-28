@@ -76,7 +76,8 @@ class Player:
         self.in_contention_with = None
         self.contention_time = None
         self.same_choice = False
-        self.pos = pygame.Vector2(rr(RADIUS + 1, DISPLAY_WIDTH - RADIUS + 1), rr(RADIUS + 1, DISPLAY_HEIGHT - RADIUS + 1))
+        self.pos = pygame.Vector2(rr(RADIUS + 1, DISPLAY_WIDTH - RADIUS + 1),
+                                  rr(RADIUS + 1, DISPLAY_HEIGHT - RADIUS + 1))
         self.color = make_new_rand_color()
         self.input = []
         self.choice = NONE
@@ -128,7 +129,8 @@ class Player:
         self.input = []
         
         # check if we need to resolve contention.
-        if self.status == CONTENTION and (datetime.now() - self.contention_time).seconds >= CONTENTION_TIME:
+        if self.status == CONTENTION and \
+           (datetime.now() - self.contention_time).seconds >= CONTENTION_TIME:
             # to resolve contention, we have to check both inputs, and compare them
             # then update each player's status, and reset the server side variables that
             # are important to have at certain values when entering contention
@@ -202,7 +204,7 @@ def start_state():
     global PLAYERS
     global MSG_NUM
     global INPUT_QUEUE
-    # wait for at least 2 people to join 
+    # wait for at least 2 people to join and ready
     while not all_ready() or len(PLAYERS) < 2:
         msg = INPUT_QUEUE.get()
         logger.info(f"got message: {msg}")
@@ -222,10 +224,8 @@ def start_state():
                     if player.name == name:
                         player.status = FREE
 
-    # TODO: send a message to everyone that we are starting, and include all data
-    # they need to initialize about players
-    # send initial info out to players
-    # build list to send out
+    # send a message to everyone that we are starting, and include all data
+    # they need to initialize their players
     to_send = []
     for player in PLAYERS:
         to_send.append((player.name, player.pos.x, player.pos.y, player.color))
@@ -271,11 +271,15 @@ def run_game():
         to_send = []
         for player in PLAYERS:
             if player.got_me_out:
-                to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, player.got_me_out.name))
+                to_send.append((player.status, player.pos.x, player.pos.y,
+                                player.same_choice, player.got_me_out.name))
             elif player.in_contention_with:
-                to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, player.in_contention_with.name))
+                to_send.append((player.status, player.pos.x, player.pos.y,
+                                player.same_choice, 
+                                player.in_contention_with.name))
             else:
-                to_send.append((player.status, player.pos.x, player.pos.y, player.same_choice, ""))
+                to_send.append((player.status, player.pos.x, player.pos.y,
+                                player.same_choice, ""))
         
         if updating:
             logger.info(f"Message {MSG_NUM} at {datetime.now()}: {to_send}")
@@ -291,7 +295,6 @@ def main():
         if not start_state():
             continue
         run_game()
-
 
 if __name__ == "__main__":
     main()
