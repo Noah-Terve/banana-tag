@@ -1,3 +1,6 @@
+# joingame.sh
+# Script for clients to run to connect to the game
+
 echo "Input your username:"
 read name
 
@@ -19,4 +22,5 @@ erl -sname $inputnode -setcookie secretCookie -hidden -noshell -run input start 
 # set terminal back 
 stty echo echok icanon -raw
 
+# kill the client side display
 ps aux | grep 'client_display.py' | awk '{print $2}' | xargs kill 
